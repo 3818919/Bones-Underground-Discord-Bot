@@ -1,3 +1,0 @@
-Saint: c
-Saint: /online
-Saint: /item blood scythe

@@ -1,0 +1,5 @@
+Saint: Sit down with F11 then hold shift & click
+Saint: If you already have fire in your inventory before the tutorial quest asks you to make a fire it won't register that you already have
+Saint: Tested, works fine. No bug found
+Saint: Could be happening if they don't have a pet bag. Is it possible to make it so the "pet storage" option on the pet menu only displays if they have a pet bag in inventory
+Saint: Could be happening if they don't have a pet bag. Is it possible to make it so the "pet storage" option on the pet menu only displays if they have a pet bag in inventory?

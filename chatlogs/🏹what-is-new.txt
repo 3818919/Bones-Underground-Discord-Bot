@@ -1,0 +1,6 @@
+elevations: ```[Patch 667]
+*Fix Global Market Sell Item (Visual Bug)
+*Fix max mining level, max fishing level, max firemaking level, max cooking level, max woodcutting level, max smithing level
+*Reduce Gold Sell Prices of all ores
+*Add item descriptions to shop windows, paperdolls, etc
+```

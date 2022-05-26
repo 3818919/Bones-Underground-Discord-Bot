@@ -13,7 +13,7 @@ try:
   from nextcord import Interaction, SlashOption
 except:
   os.system("/opt/virtualenvs/python3/bin/python3 -m pip install --upgrade pip")
-  os.system("pip3 install -U nextcord")
+  os.system("pip3 install -U 'nextcord==2.0.0a10'")
   from nextcord import Interaction, SlashOption
 
   

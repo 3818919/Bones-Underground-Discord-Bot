@@ -1,151 +1,136 @@
 import os
+from bin import config, api
 import nextcord
-from nextcord import Interaction, SlashOption
 from nextcord.ext import commands, tasks
-from keep_alive import keep_alive
-from itertools import cycle
-import random
 import pandas as pd
 import socket
-import asyncio
-from replit import db
+from urllib.request import urlopen
+from urllib.parse import quote
+import http.client
+import json
+import random
+
 try:
   from nextcord import Interaction, SlashOption
 except:
+  #If the bot auto updates, this will downgrade it back to being functional
   os.system("/opt/virtualenvs/python3/bin/python3 -m pip install --upgrade pip")
   os.system("pip3 install -U 'nextcord==2.0.0a10'")
-  from nextcord import Interaction, SlashOption
-
-  
+  os.system('reboot')
 
 class bcolours:
-  GREEN = '\033[92m'
-  YELLOW = '\033[93m'
-  RED = '\033[91m'
-# bcolors.RED + 
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
 
 TOKEN = os.environ['TOKEN']
+intents = nextcord.Intents.default()
+intents.typing = False
+intents.presences = False
 
-bot = commands.Bot(command_prefix='$', case_insensitive=True)
+bot = commands.Bot(case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-ServerID = 192691686156140545  # FE Discord
+#This bot stores all server chatlogs, To disable change True to False
+Log_Chat = True
+ServerID = config.ServerID()
 
 Server = '''
+█▀▄▀█ ▄▀█ █▀▄ █▀▀   █▄▄ █▄█   █▀ ▄▀█ █ █▄░█ ▀█▀
+█░▀░█ █▀█ █▄▀ ██▄   █▄█ ░█░   ▄█ █▀█ █ █░▀█ ░█░
 
-█▀▀ ▄▀█ █░░ █░░ █▀▀ █▄░█   █▀▀ █░█ █▀█ █░░ █░█ ▀█▀ █ █▀█ █▄░█
-█▀░ █▀█ █▄▄ █▄▄ ██▄ █░▀█   ██▄ ▀▄▀ █▄█ █▄▄ █▄█ ░█░ █ █▄█ █░▀█
+░█▀▀█ █▀▀█ █▀▀▄ █▀▀ █▀▀ 　 ░█─░█ █▀▀▄ █▀▀▄ █▀▀ █▀▀█ █▀▀▀ █▀▀█ █▀▀█ █──█ █▀▀▄ █▀▀▄ 
+░█▀▀▄ █──█ █──█ █▀▀ ▀▀█ 　 ░█─░█ █──█ █──█ █▀▀ █▄▄▀ █─▀█ █▄▄▀ █──█ █──█ █──█ █──█ 
+░█▄▄█ ▀▀▀▀ ▀──▀ ▀▀▀ ▀▀▀ 　 ─▀▄▄▀ ▀──▀ ▀▀▀─ ▀▀▀ ▀─▀▀ ▀▀▀▀ ▀─▀▀ ▀▀▀▀ ─▀▀▀ ▀──▀ ▀▀▀─ 
 
 '''
 
-print (bcolours.GREEN + Server)
+print(bcolours.GREEN + Server)
 
 for filename in os.listdir('./cogs'):
-  if filename.endswith('.py'):
-    bot.load_extension(f'cogs.{filename[:-3]}')
-  else:
-    print(bcolours.RED + f'Unable to load {filename[:-3]}')
+    if filename.endswith('.py'):
+        bot.load_extension(f'cogs.{filename[:-3]}')
+    else:
+      print(bcolours.RED + f'Unable to load {filename[:-3]}')
 
-    
+
 #Checks players & server online & updates status
-@tasks.loop(seconds=60)
-async def status_swap():
-  #101.98.189.250 - Ele PC
-  #173.234.155.239 - VPS
-  Maintinence = False
-  ManualMode = False
-  
-  if Maintinence == False:
-    ip = "101.98.189.250"
-    port = 8078
-    if ManualMode == True:
-      port = 8077
-    ele = '<@188605352223309824>'
-    url = 'http://101.98.189.250/eosource.net/characters.php?ip=game.fallen-evolution.com&port=8078'
+@tasks.loop(seconds=30)
+async def status_swap(): 
+    ip, port, API, timeout, retry, thumbnail = config.api()
+    alert_check, alert_channel, alert = config.api_alert()
 
-    retry = 5
-    timeout = 3
     def isOpen(ip, port):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(timeout)
         try:
-                s.connect((ip, int(port)))
-                s.shutdown(socket.SHUT_RDWR)
-                return True
+            s.connect((ip, int(port)))
+            s.shutdown(socket.SHUT_RDWR)
+            return True
         except:
-                return False
+            return False
         finally:
-                s.close()
+            s.close()
 
     def checkHost(ip, port):
         ipup = False
         for i in range(retry):
-          if isOpen(ip, port):
-                        ipup = True
-                        break
-          else:
+            if isOpen(ip, port):
+                ipup = True
+                break
+            else:
 
-                        return
+                return
         return ipup
 
+    #If Server Online#
     if checkHost(ip, port):
-      Players = pd.read_html(url)[0]
-      Players.index += 1
-      Lists = Players.head(100) #Only show 20 Items
-      People = Lists.Name
-      Names = People.values
-      PeopleList = ', '.join(Names)
-      PeopleList = PeopleList.replace(', Febot', ' ')
-      PeopleList = PeopleList.replace(' Febot,', ' ')
-      ponline = len(Names)
-      ponline = ponline - 1
-      status = f"FE - {ponline} Players Online [{PeopleList}]"
-      
-      if ponline == 1:
-        game = nextcord.Game(status)
-        await bot.change_presence(status=nextcord.Status.online, activity= game)
-      
-      elif ponline < 1:
-        game = nextcord.Game(f'FE - Server Online')
-        await bot.change_presence(status=nextcord.Status.online, activity= game)
+      Players, count = api.online()
 
-      else:
-        game = nextcord.Game(status)
-        await bot.change_presence(status=nextcord.Status.online, activity= game)
+      status = [f'BU - {count} Players Online']
+      sta = random.choice(status)
+      game = nextcord.Game(sta)
+      await bot.change_presence(status=nextcord.Status.online,activity=game)
 
+    #Server Offline
     else:
-      print('Server Down')
-      channel = bot.get_channel(948802225713582142)
-      message = f'{ele} **The server appears to be offline.**'
-      name= nextcord.Game(f'Nothing - Server Offline')
-      await bot.change_presence(status=nextcord.Status.dnd, activity=name)
-      await channel.send(message, delete_after = 57)
-      
-  else:
-    game = nextcord.Game('FE - Server Maintinence')
-    await bot.change_presence(status=nextcord.Status.idle, activity= game)
+      print('Server Offline')
+      game = nextcord.Game(f"Nothing - Server Offline")
+      await bot.change_presence(status=nextcord.Status.dnd,activity=game)
+  
+      if alert_check == True:
+          #Sends an alert to a specified channel if the server ever goes offline. Used to alert admins.
+          print(bcolours.RED + 'Server Down')
+          channel = bot.get_channel(alert_channel)
+          admin = f"<{alert}>"
+          message = f'{admin} **The server appears to be offline.**'
+          game = nextcord.Game(f'Nothing - Server Offline')
+          await channel.send(message, delete_after=57)
 #End status update
 
+#Log into discord server
 @bot.event
 async def on_ready():
-  status_swap.start()
-  print('I have logged in to the FE Discord as {0.user}'.format(bot))
+    status_swap.start()
+    print('I have logged in to the BU Discord as {0.user}'.format(bot))
 
-
-@bot.event
-async def on_message(message):
-  if message.author == bot.user:
-    return
-  if message.author.bot: 
-    return
-  
-  #print (message.channel)
-  print(bcolours.GREEN + f'{message.author}: {message.content}')
-  channel = message.channel.name
-  path = f"chatlogs/{channel}.txt" 
-  with open(path, 'a+') as f:
-    print("{0.author.name}: {0.content}".format(message), file=f)
-    await bot.process_commands(message)
-
+#Stuff happends when a message is sent to the discord.
+#@bot.event
+#async def on_message(message):
+#    if message.author == bot.user:
+#        return
+#    if message.author.bot:
+#        return
+#
+#    if Log_Chat == True:
+#      print(bcolours.GREEN + f'{message.author}: {message.content}')
+#      channel = message.channel.name
+#      path = f"chatlogs/{channel}.txt"
+#      with open(path, 'a+') as f:
+#          print(bcolours.GREEN + " {0.author.name}: {0.content}".format(message),
+#                file=f)
+#          await bot.process_commands(message)
+#    else:
+#      await bot.process_commands(message)
 
 bot.run(TOKEN)

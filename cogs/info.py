@@ -1,49 +1,219 @@
+import os
+from bin import api, config
 import nextcord
 from nextcord.ext import commands
 from nextcord import Embed, asset
-import io
-import aiohttp
-import numpy as np
-import pandas as pd
+import json
 
-ServerID = 192691686156140545  # FE Discord
+ServerID = config.ServerID()
 
 class infoCog(commands.Cog):
   def __init__(self, bot: commands.Bot):
     self.bot = bot
 
-  @nextcord.slash_command(guild_ids=[ServerID], description="Lists the top FE Players (By Level)")
-  async def toplist(self, interaction: nextcord.Interaction):
-    topplayers = pd.read_html('https://fallen-evolution.com/topplayers.php')[0]
-    topplayers.index += 1
-    Lists = topplayers.head(50)
-    Players = Lists[0]
-    Level = Lists[1]
-    Players = Players.values
-    Level = Level.values
-    Players = np.delete(Players, 0)
-    Players = Players.tolist()
-    
-    for i in range(len(Players)):
-      Players[i] = Players[i].capitalize() 
+  #Item Lookup
+  @nextcord.slash_command(guild_ids=[ServerID], description="Lookup in game items & stats.")
+  async def item(self, interaction: nextcord.Interaction, name):
+    data = api.itemlookup(name)
+    try:
+      for i in data:
+        try:
+          item_id = i['id']
+          name = i['name']
+          type = i['type']
+          spec = i['special']
+          hp = i['hp']
+          tp = i['tp']
+          mindmg = i['min_damage']
+          maxdmg = i['max_damage']
+          aoe = i['aoe_range']
+          acc = i['accuracy']
+          eva = i['evade']
+          arm = i['armor']
+          str = i['str']
+          int = i['int']
+          wis = i['wis']
+          agi = i['agi']
+          con = i['con']
+          cha = i['cha']
+          levelreq = i['level_req']
+          classreq = i['class_req']
+          strreq = i['str_req']
+          intlreq = i['int_req']
+          wisreq = i['wis_req']
+          agireq = i['agi_req']
+          conreq = i['con_req']
+          chareq = i['cha_req']
+        except:
+          pass
+  
+      thumbnail = f"https://game.bones-underground.org/api/gfx/items?id={item_id}"
+      item = nextcord.Embed(title = 'Item Lookup',description = f'Looks like I was able to find something, take a look:', colour = nextcord.Colour.green())
+      item.set_thumbnail(url=thumbnail)
       
-    Level = np.delete(Level, 0)
-    Players = '\n'.join(Players)
-    Levels = '\n'.join(Level) 
-    TopList = nextcord.Embed(title = 'Top 50 Players',url = 'https://fallen-evolution.com/topplayers', colour = nextcord.Colour.blue())
-    TopList.add_field(name="Name", value=Players, inline=True)
-    TopList.add_field(name="Level", value=Levels, inline=True)
-    TopList.set_footer(text='Powered by Fallen Evolution |  www.fallen-evolution.com/topplayers')
-    await interaction.response.send_message(embed=TopList, delete_after = 120)  
+      try:
+        item.add_field(name='Name', value=name, inline=True)
+        item.add_field(name='Type', value=type, inline=True)
+        item.add_field(name='Rarity', value=spec, inline=True)
+        item.add_field(name='HP', value=hp, inline=True)
+        item.add_field(name='TP', value=tp, inline=True)
+        if levelreq == 0:
+          item.add_field(name='LVL Req', value='None', inline=True)
+        else:
+          item.add_field(name='LVL Req', value=levelreq, inline=True)
+        item.add_field(name='⚔️Min DMG', value=mindmg, inline=True)
+        item.add_field(name='⚔️Max DMG', value=maxdmg, inline=True)
+        if aoe == 0:
+          item.add_field(name='AOE Range', value=f'None', inline=True)
+        else:
+          item.add_field(name='AOE Range', value=f'{aoe} Squares', inline=True)
+        item.add_field(name='🎯Acc', value=acc, inline=True)
+        item.add_field(name='👟Evade', value=eva, inline=True)
+        item.add_field(name='🛡️Armor', value=arm, inline=True)
+        item.add_field(name='💪STR', value=str, inline=True)
+        item.add_field(name='🧠INT', value=int, inline=True)
+        item.add_field(name='📚WIS', value=wis, inline=True)
+        item.add_field(name='🚶AGI', value=agi, inline=True)
+        item.add_field(name='❤️CON', value=con, inline=True)
+        item.add_field(name='✨CHA', value=cha, inline=True)
+        if classreq:
+          item.add_field(name='Class Requirement', value=classreq, inline=True)
+        if strreq:
+          item.add_field(name='STR Requirement', value=strreq, inline=True)
+        if intlreq:
+          item.add_field(name='INT Requirement', value=intlreq, inline=True)
+        if wisreq:
+          item.add_field(name='WIS Requirement', value=wisreq, inline=True)
+        if agireq:
+          item.add_field(name='AGI Requirement', value=agireq, inline=True)
+        if conreq:
+          item.add_field(name='CON Requirement', value=conreq, inline=True)
+        if chareq:
+          item.add_field(name='CHA Requirement', value=chareq, inline=True)
+      except:
+        
+        pass
+        
+      await interaction.response.send_message(embed=item, delete_after = 120)
+    except:
+      error = 'Sorry, I could not find the item you are looking for.'
+      await interaction.response.send_message(error, delete_after = 30)
 
+  #NPC Lookup
+  @nextcord.slash_command(guild_ids=[ServerID], description="Lookup in game items & stats.")
+  async def npc(self, interaction: nextcord.Interaction, name):
+    data = api.npclookup(name)
+    try:
+      for i in data:
+        try:
+          npc_id = i['id']
+          name = i['name']
+          type = i['type']
+          boss = i['boss']
+          if boss == 0:
+            boss = False
+          else:
+            boss = True
+          hp = i['hp']
+          mindmg = i['min_damage']
+          maxdmg = i['max_damage']
+          acc = i['accuracy']
+          eva = i['evade']
+          arm = i['armor']
+          exp = i['experience']
+          drops = i['drops']
+          for i in drops:
+            itemname = []
+            itemname.append(i['name'])
+          loc = i['locations']
+          for i in loc:
+            locname = []
+            locname.append(i)
+            
+        except:
+          if 'Could not find' in data:
+            error = data
+            await interaction.response.send_message(error, delete_after = 120)
+            return
+          pass
+  
+      thumbnail = f"https://game.bones-underground.org/api/gfx/npcs?id={npc_id}"
+      item = nextcord.Embed(title = 'NPC Lookup',description = f'Looks like I was able to find something, take a look:', colour = nextcord.Colour.green())
+      item.set_thumbnail(url=thumbnail)
+      
+      try:
+        item.add_field(name='Name', value=name, inline=True)
+        item.add_field(name='Type', value=type, inline=True)
+        item.add_field(name='HP', value=hp, inline=True)
+        item.add_field(name='⚔️Min DMG', value=mindmg, inline=True)
+        item.add_field(name='⚔️Max DMG', value=maxdmg, inline=True)
+        item.add_field(name='🎯Acc', value=acc, inline=True)
+        item.add_field(name='👟Evade', value=eva, inline=True)
+        item.add_field(name='🛡️Armor', value=arm, inline=True)
+        item.add_field(name='EXP', value=exp, inline=True)
+        item.add_field(name='Drops', value=itemname, inline=True)
+        item.add_field(name='Locations', value=locname, inline=True)
+        
+      except:
+        pass
+        
+      await interaction.response.send_message(embed=item, delete_after = 120)
+    except:
+      error = 'Sorry, I could not find the npc you are looking for.'
+      await interaction.response.send_message(error, delete_after = 30)
 
-  @nextcord.slash_command(guild_ids=[ServerID], description="Find out more about Fallen Evolution")
-  async def wiki(self, interaction: nextcord.Interaction):
-    link = 'https://wiki.fallen-evolution.com/index.php/Main_Page'
-    logo = 'https://wiki.fallen-evolution.com/resources/assets/logo.png' 
-    wiki=nextcord.Embed(title="FE Wiki", url=link, description="For information about Fallen Evolution, visit the wiki.")
-    wiki.set_thumbnail(url=logo)
-    await interaction.response.send_message(embed=wiki) 
+  #Spells Lookup
+  @nextcord.slash_command(guild_ids=[ServerID], description="Lookup in game items & stats.")
+  async def spell(self, interaction: nextcord.Interaction, name):
+    data = api.spells(name)
+    try:
+      for i in data:
+        try:
+          spell_id = i['id']
+          name = i['name']
+          cast_time = i['cast_time']
+          hp = i['hp']
+          mindmg = i['min_damage']
+          maxdmg = i['max_damage']
+          acc = i['accuracy']
+          target = i['target_type']
+          cost = i['tp_cost']
+          learn = i['taught_by']
+          for t in learn:
+            teacher = t['name']
+           
+        except:
+          if 'Could not find' in data:
+            error = data
+            await interaction.response.send_message(error, delete_after = 120)
+            return
+          pass
+  
+      thumbnail = f"https://game.bones-underground.org/api/gfx/spells?id={spell_id}"
+      item = nextcord.Embed(title = 'NPC Lookup',description = f'Looks like I was able to find something, take a look:', colour = nextcord.Colour.green())
+      item.set_thumbnail(url=thumbnail)
+      
+      try:
+        item.add_field(name='Name', value=name, inline=True)
+        item.add_field(name='Targeting', value=target, inline=True)
+        if hp != 0:
+          item.add_field(name='HP', value=hp, inline=True)
+        item.add_field(name='Min DMG', value=mindmg, inline=True)
+        item.add_field(name='Max DMG', value=maxdmg, inline=True)
+        item.add_field(name='Acc', value=acc, inline=True)
+        item.add_field(name='Cast Time', value=f'{cast_time}s', inline=True)
+        item.add_field(name='Mana Cost', value=cost, inline=True)
+        item.add_field(name='Learn From', value=teacher, inline=True)
+        
+      except:
+        pass
+        
+      await interaction.response.send_message(embed=item, delete_after = 120)
+    except:
+      error = 'Sorry, I could not find the npc you are looking for.'
+      await interaction.response.send_message(error, delete_after = 30)
+
+    
 
 
 class bcolours:
@@ -54,4 +224,4 @@ class bcolours:
 
 def setup(bot):
   bot.add_cog(infoCog(bot))
-  print (bcolours.GREEN + 'Toplist Command Loaded\nTopdonations Command Loaded\nWiki Command Loaded')
+  print (bcolours.GREEN + 'Item Lookup Command Loaded')

@@ -100,7 +100,6 @@ async def status_swap():
   
       if alert_check == True:
           #Sends an alert to a specified channel if the server ever goes offline. Used to alert admins.
-          print(bcolours.RED + 'Server Down')
           channel = bot.get_channel(alert_channel)
           admin = f"<{alert}>"
           message = f'{admin} **The server appears to be offline.**'

@@ -1,11 +1,8 @@
-import os
 from bin import api, config
 import nextcord
 from nextcord.ext import commands
-from nextcord import Embed, asset
-import json
 
-ServerID = config.ServerID()
+ServerID = config.DServ()
 
 class infoCog(commands.Cog):
   def __init__(self, bot: commands.Bot):
@@ -17,11 +14,11 @@ class infoCog(commands.Cog):
     data = api.itemlookup(name)
     try:
       for i in data:
+        item_id = i['id']
+        name = i['name']
+        type = i['type']
+        spec = i['special']
         try:
-          item_id = i['id']
-          name = i['name']
-          type = i['type']
-          spec = i['special']
           hp = i['hp']
           tp = i['tp']
           mindmg = i['min_damage']
@@ -47,16 +44,18 @@ class infoCog(commands.Cog):
         except:
           pass
   
-      thumbnail = f"https://game.bones-underground.org/api/gfx/items?id={item_id}"
+      thumbnail = api.itempic(item_id)
       item = nextcord.Embed(title = 'Item Lookup',description = f'Looks like I was able to find something, take a look:', colour = nextcord.Colour.green())
       item.set_thumbnail(url=thumbnail)
-      
+  
       try:
         item.add_field(name='Name', value=name, inline=True)
         item.add_field(name='Type', value=type, inline=True)
         item.add_field(name='Rarity', value=spec, inline=True)
-        item.add_field(name='HP', value=hp, inline=True)
-        item.add_field(name='TP', value=tp, inline=True)
+        if hp > 0:
+          item.add_field(name='HP', value=hp, inline=True)
+        if tp > 0:
+          item.add_field(name='TP', value=tp, inline=True)
         if levelreq == 0:
           item.add_field(name='LVL Req', value='None', inline=True)
         else:
@@ -91,13 +90,14 @@ class infoCog(commands.Cog):
         if chareq:
           item.add_field(name='CHA Requirement', value=chareq, inline=True)
       except:
-        
         pass
         
       await interaction.response.send_message(embed=item, delete_after = 120)
+      
     except:
-      error = 'Sorry, I could not find the item you are looking for.'
-      await interaction.response.send_message(error, delete_after = 30)
+      error = "Sorry, I wasn't able to find that item."
+      await interaction.response.send_message(error, delete_after = 120)
+
 
   #NPC Lookup
   @nextcord.slash_command(guild_ids=[ServerID], description="Lookup in game items & stats.")
@@ -137,7 +137,7 @@ class infoCog(commands.Cog):
             return
           pass
   
-      thumbnail = f"https://game.bones-underground.org/api/gfx/npcs?id={npc_id}"
+      thumbnail = api.npcpic(npc_id)
       item = nextcord.Embed(title = 'NPC Lookup',description = f'Looks like I was able to find something, take a look:', colour = nextcord.Colour.green())
       item.set_thumbnail(url=thumbnail)
       
@@ -189,7 +189,7 @@ class infoCog(commands.Cog):
             return
           pass
   
-      thumbnail = f"https://game.bones-underground.org/api/gfx/spells?id={spell_id}"
+      thumbnail = api.spellpic(spell_id)
       item = nextcord.Embed(title = 'NPC Lookup',description = f'Looks like I was able to find something, take a look:', colour = nextcord.Colour.green())
       item.set_thumbnail(url=thumbnail)
       
@@ -212,9 +212,6 @@ class infoCog(commands.Cog):
     except:
       error = 'Sorry, I could not find the npc you are looking for.'
       await interaction.response.send_message(error, delete_after = 30)
-
-    
-
 
 class bcolours:
   GREEN = '\033[92m'

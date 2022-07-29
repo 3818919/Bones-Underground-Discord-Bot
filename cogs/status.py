@@ -1,13 +1,9 @@
-import os
 from bin import config, api
 import nextcord
-from nextcord import Interaction, SlashOption
-from nextcord.ext import commands, tasks
+from nextcord.ext import commands
 import socket
-from urllib.request import urlopen
-import pandas as pd
 
-ServerID = config.ServerID()
+ServerID = config.DServ()
 
 class bcolours:
   GREEN = '\033[92m'
@@ -23,8 +19,9 @@ class Server_Status(commands.Cog, name='Server_Status'):
   async def online(self, interaction: nextcord.Interaction):
     
     #Status Bones Underground   
-    ip, port, API, timeout, retry, thumbnail = config.api()
-    alert_check, alert_channel, alert = config.api_alert()
+    ip, port, retry, timeout = config.Server()
+    alert_check, alert_channel, alert = config.Alerts()
+    thumbnail = api.thumbnail()
   
     def isOpen(ip, port):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -1,24 +1,41 @@
-import random
+import configparser
 
-def ServerID():
-  #Change number to your discord server ID. Bot is locked to 1 discord server.
-  ID = 828442977134182401
-  return ID
+# Method to read config file settings
+def read_config():
+    config = configparser.ConfigParser()
+    config.read('configurations.ini')
+    return config
 
-def api(): 
-  ip = "game.bones-underground.org" #Server IP
-  port = 8078 #Server Port
-  API = 'https://game.bones-underground.org/api/online' #API Online List
-  retry = 5 #Ping Retry
-  timeout = 3 #Ping Timeout
-  id = random.randint(1,500) #Generates a random npc image from BU API
-  thumbnail = f'https://game.bones-underground.org/api/gfx/npcs?id={id}'
-  return ip, port, API, timeout, retry, thumbnail
+def DServ():
+  config = read_config()
+  ServerID = int(config['DiscordServer']['ServerId'])
+  return ServerID
 
-def api_alert():
-  alert_check = True  #Set to True to activate admin alert feature.
-  alert_channel = 849988039383711754  #Change number to the channel ID of the server offline alert. This will send a message to a private channel when server offline.
-  alert = '@512547822705311746'  #Change number to server owner ID, this will @ them if server is offline.
-  return alert_check, alert_channel, alert
+def Logs():
+  config = read_config()
+  Log_Chat = config['DiscordServer']['log_chat']
+  return Log_Chat
+  
+
+def API():
+  config = read_config()
+  domain = config['APISettings']['domain']
+  return domain
+
+def Server():
+  config = read_config()
+  ip = config['ServerSettings']['ip']
+  port = int(config['ServerSettings']['port'])
+  retry = int(config['ServerSettings']['retry'])
+  timeout = int(config['ServerSettings']['timeout'])
+  return ip, port, retry, timeout
+
+def Alerts():
+  config = read_config()
+  alert_check = config['StatusAlerts']['offline_alert']
+  alert_channel = int(config['StatusAlerts']['alert_channel'])
+  alert_admin = int(config['StatusAlerts']['alert_admin'])
+  return alert_check, alert_channel, alert_admin
+  
 
   

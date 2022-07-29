@@ -1,7 +1,9 @@
 import os
-from bin import config, api
+from bin import api, config
+
 import nextcord
 from nextcord.ext import commands, tasks
+
 import pandas as pd
 import socket
 from urllib.request import urlopen
@@ -9,14 +11,16 @@ from urllib.parse import quote
 import http.client
 import json
 import random
+import configparser
 
 try:
   from nextcord import Interaction, SlashOption
+  
 except:
   #If the bot auto updates, this will downgrade it back to being functional
   os.system("/opt/virtualenvs/python3/bin/python3 -m pip install --upgrade pip")
   os.system("pip3 install -U 'nextcord==2.0.0a10'")
-  os.system('reboot')
+  os.system('restart')
 
 class bcolours:
     GREEN = '\033[92m'
@@ -25,15 +29,14 @@ class bcolours:
 
 TOKEN = os.environ['TOKEN']
 intents = nextcord.Intents.default()
+intents.message_content = True
 intents.typing = False
 intents.presences = False
 
-bot = commands.Bot(case_insensitive=True, intents=intents)
+bot = commands.Bot(command_prefix='/', intents=intents, case_insensitive=True,)
 bot.remove_command('help')
+Log_Chat = config.Logs()
 
-#This bot stores all server chatlogs, To disable change True to False
-Log_Chat = True
-ServerID = config.ServerID()
 
 Server = '''
 █▀▄▀█ ▄▀█ █▀▄ █▀▀   █▄▄ █▄█   █▀ ▄▀█ █ █▄░█ ▀█▀
@@ -57,8 +60,8 @@ for filename in os.listdir('./cogs'):
 #Checks players & server online & updates status
 @tasks.loop(seconds=30)
 async def status_swap(): 
-    ip, port, API, timeout, retry, thumbnail = config.api()
-    alert_check, alert_channel, alert = config.api_alert()
+    ip, port, retry, timeout = config.Server()
+    alert_check, alert_channel, alert = config.Alerts()
 
     def isOpen(ip, port):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -112,24 +115,24 @@ async def status_swap():
 async def on_ready():
     status_swap.start()
     print('I have logged in to the BU Discord as {0.user}'.format(bot))
+    
 
 #Stuff happends when a message is sent to the discord.
-#@bot.event
-#async def on_message(message):
-#    if message.author == bot.user:
-#        return
-#    if message.author.bot:
-#        return
-#
-#    if Log_Chat == True:
-#      print(bcolours.GREEN + f'{message.author}: {message.content}')
-#      channel = message.channel.name
-#      path = f"chatlogs/{channel}.txt"
-#      with open(path, 'a+') as f:
-#          print(bcolours.GREEN + " {0.author.name}: {0.content}".format(message),
-#                file=f)
-#          await bot.process_commands(message)
-#    else:
-#      await bot.process_commands(message)
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+    if message.author.bot:
+        return
+
+    if Log_Chat == True:
+      #print (message.channel)
+      print(bcolours.GREEN + f'{message.author}: {message.content}')
+      channel = message.channel.name
+      path = f"chatlogs/{channel}.txt" 
+      with open(path, 'a+') as f:
+        print("{0.author.name}: {0.content}".format(message), file=f)
+      
+    await bot.process_commands(message)
 
 bot.run(TOKEN)

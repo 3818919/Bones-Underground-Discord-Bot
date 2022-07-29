@@ -1,18 +1,19 @@
-from bin import config, api
+from bin import config
 from urllib.parse import quote
 import http.client
 import json
-import socket
-from urllib.request import urlopen
 import pandas as pd
+import random
+
 
 def itemlookup(name):
+  domain = config.API()
   name = name.title()
   if 'Of' in name:
     name = name.replace('Of', 'of')
   search = quote(name)
   try:
-    conn = http.client.HTTPSConnection("game.bones-underground.org")
+    conn = http.client.HTTPSConnection(domain)
     payload = ''
     headers = {}
     conn.request("GET", f"/api/items/search?name.eq={search}", payload, headers)
@@ -27,8 +28,9 @@ def itemlookup(name):
 
 def npclookup(name):
   try:
+    domain = config.API()
     search = quote(name.title())
-    conn = http.client.HTTPSConnection("game.bones-underground.org")
+    conn = http.client.HTTPSConnection(domain)
     payload = ''
     headers = {}
     conn.request("GET", f"/api/npcs/search?name.eq={search}", payload, headers)
@@ -42,9 +44,8 @@ def npclookup(name):
     return data
 
 def online():
-  ip, port, API, timeout, retry, thumbnail = config.api()
-  
-  conn = http.client.HTTPSConnection("game.bones-underground.org")
+  domain = config.API()
+  conn = http.client.HTTPSConnection(domain)
   payload = ''
   headers = {}
   conn.request("GET", f"/api/online", payload, headers)
@@ -61,13 +62,15 @@ def online():
   Name = List.name
   Name = sorted(Name.values)
   Players = '\n'.join(Name)
+  Players = Players.replace("Cirras", "**Cirras**")
   count = len(data)
   return Players, count
 
 def spells(name):
   try:
+    domain = config.API()
     search = quote(name.title())
-    conn = http.client.HTTPSConnection("game.bones-underground.org")
+    conn = http.client.HTTPSConnection(domain)
     payload = ''
     headers = {}
     conn.request("GET", f"/api/spells/search?name.eq={search}", payload, headers)
@@ -79,4 +82,24 @@ def spells(name):
   except:
     data = "Could not find NPC"
     return data
-  
+
+def thumbnail():
+  domain = config.API()
+  num = random.randint(1,500)
+  thumbnail = f"https://{domain}/api/gfx/npcs?id={num}"
+  return thumbnail
+
+def itempic(itemid):
+  domain = config.API()
+  itempic = f"https://{domain}/api/gfx/items?id={itemid}"
+  return itempic
+
+def npcpic(npcid):
+  domain = config.API()
+  npcpic = f"https://{domain}/api/gfx/npcs?id={npcid}"
+  return npcpic
+
+def spellpic(spellid):
+  domain = config.API()
+  spellpic = f"https://{domain}/api/gfx/spells?id={spellid}"
+  return spellpic

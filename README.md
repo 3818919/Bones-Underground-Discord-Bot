@@ -19,3 +19,9 @@ Server variables such as ip, port or url can be found in bin/config.py.
 
 If setup in config.py, the bot can ping an admin in a specified channel when the server goes offline.
 ![Alert](https://cdn.discordapp.com/attachments/849988039383711754/1001731912664088686/Screen_Shot_2022-07-27_at_4.04.51_pm.png)
+
+
+![Alert](https://cdn.discordapp.com/attachments/849988039383711754/1004997824561303652/1.PNG)
+![Alert](https://cdn.discordapp.com/attachments/849988039383711754/1004997824934580245/2.PNG)
+![Alert](https://cdn.discordapp.com/attachments/849988039383711754/1004997825249148928/3.PNG)
+![Alert](https://cdn.discordapp.com/attachments/849988039383711754/1004997825530187837/4.PNG)
